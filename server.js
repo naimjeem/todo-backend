@@ -23,12 +23,14 @@ let tasks = [
     id: uuidv4(),
     text: 'Learn Git branching strategies',
     completed: false,
+    priority: 'medium',
     createdAt: new Date().toISOString()
   },
   {
     id: uuidv4(),
     text: 'Practice commit message conventions',
     completed: false,
+    priority: 'high',
     createdAt: new Date().toISOString()
   }
 ];
@@ -45,21 +47,37 @@ app.get('/api/health', (req, res) => {
 // Routes
 // Get all tasks
 app.get('/api/tasks', (req, res) => {
-  res.json(tasks);
+  const { sort } = req.query;
+  let sortedTasks = [...tasks];
+  
+  // Sort by priority if requested
+  if (sort === 'priority') {
+    const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+    sortedTasks.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
+  }
+  
+  res.json(sortedTasks);
 });
 
 // Add new task
 app.post('/api/tasks', (req, res) => {
-  const { text } = req.body;
+  const { text, priority = 'medium' } = req.body;
   
   if (!text || text.trim() === '') {
     return res.status(400).json({ error: 'Task text is required' });
+  }
+
+  // Validate priority
+  const validPriorities = ['low', 'medium', 'high'];
+  if (!validPriorities.includes(priority)) {
+    return res.status(400).json({ error: 'Priority must be low, medium, or high' });
   }
 
   const newTask = {
     id: uuidv4(),
     text: text.trim(),
     completed: false,
+    priority: priority,
     createdAt: new Date().toISOString()
   };
 
@@ -70,7 +88,7 @@ app.post('/api/tasks', (req, res) => {
 // Update task
 app.put('/api/tasks/:id', (req, res) => {
   const { id } = req.params;
-  const { text, completed } = req.body;
+  const { text, completed, priority } = req.body;
 
   const taskIndex = tasks.findIndex(task => task.id === id);
   
@@ -84,6 +102,15 @@ app.put('/api/tasks/:id', (req, res) => {
   
   if (completed !== undefined) {
     tasks[taskIndex].completed = completed;
+  }
+
+  if (priority !== undefined) {
+    // Validate priority
+    const validPriorities = ['low', 'medium', 'high'];
+    if (!validPriorities.includes(priority)) {
+      return res.status(400).json({ error: 'Priority must be low, medium, or high' });
+    }
+    tasks[taskIndex].priority = priority;
   }
 
   tasks[taskIndex].updatedAt = new Date().toISOString();
