@@ -24,7 +24,7 @@ A RESTful API for managing todo tasks, built with Express.js and designed to dem
 
 1. Clone the repository:
 ```bash
-git clone <your-backend-repo-url>
+git clone https://github.com/naimjeem/todo-backend.git
 cd todo-backend
 ```
 
